@@ -1,13 +1,13 @@
 // Copyright (C) Dialectics 2016
 package org.scamas.smp
 
-import org.scamas.core.Move
+import org.scamas.core._
 
 /**
   *  All possible moves performed by the agent
   */
-
-case object SMPMove extends Move
-object Propose extends SMPMove
-object Accept extends SMPMove
-object Reject extends SMPMove
+case object Propose extends Move
+case object Accept extends Move
+case object Reject extends Move
+case object Divorce extends Move
+case object AcknowledgeDivorce extends Move

@@ -2,7 +2,7 @@
 
 package org.scamas.smp
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, Props}
 import org.scamas.core._
 
 class Marriage(husband: String, val wife: String) extends PartialSolution
@@ -15,17 +15,13 @@ class Matching(var result: List[Marriage]) extends Solution(result){
 /**
   * Solver for the stable marriage problem
   * @param name of the agent
-  * @param acquaintances
+  * @param addresses
   */
-class Solver(override var acquaintances: Map[String, ActorRef],
+class Solver(override var addresses: Map[String, ActorRef],
              var men: Seq[Individual],
              var women: Seq[Individual])
-              extends MultiagentSystem(acquaintances) {
+              extends MultiagentSystem(addresses) {
   this: Matching =>
-
-
-
-
   /**
     * Method invoked when a message is received by the solver
     */
@@ -33,10 +29,13 @@ class Solver(override var acquaintances: Map[String, ActorRef],
     // When the works should be done
     case Start => {
       boss= sender// note the reference to the application
+      //TODO
       men.foreach{ case man =>
-        acquaintances(man.name) ! Start
+        val proposer =context.actorOf(Props(classOf[Proposer]), man.name)
+        proposer ! Start
       }
     }
+
     // When a work is done
     case Stop(marriage: Marriage) => {
       this.add(marriage)

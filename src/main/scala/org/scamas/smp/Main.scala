@@ -2,11 +2,11 @@
 package org.scamas.smp
 
 
-import org.scamas.core.{Start,Stop}
-
-import akka.actor.{ActorSystem, Props}
+import org.scamas.core.{Start, Stop}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -35,7 +35,7 @@ object Main {
     val y3= new Individual("y3",Array("x1","x3","x2"))
     val women= List(y1,y2,y3)
     // Launch a new system
-    val solver= system.actorOf(Props(classOf[Solver], men, women), name = "solver")
+    val solver= system.actorOf(Props(classOf[Solver], Map[String, ActorRef]() ,men, women), name = "solver")
 
     // The current thread is blocked and it waits for the solver to "complete" the Future with it's reply.
     val future = solver ? Start

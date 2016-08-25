@@ -13,43 +13,46 @@ sealed class Goal(name : String)
 case class ActiveGoal(name: String) extends Goal(name)
 case class AchievedGoal(name: String) extends Goal(name)
 
-abstract class StateOfMind
 
+/*
+ * Preferences are immutable state of mind for agents
+ */
+abstract class Preferences
+
+/**
+  * Solution for a multiagent problem
+ */
 abstract class PartialSolution
-abstract class Solution(result: List[PartialSolution]) extends StateOfMind
+abstract class Solution(result: List[PartialSolution])
 
 
 /**
   * Agent which is reactive
-  * @param name of the agent
-  * @param acquaintances
+  * @param addresses
   *
   * */
-abstract class Agent(var acquaintances: Map[String, ActorRef]) extends Actor {
-  this:StateOfMind=>
+abstract class Agent(val addresses: Map[String, ActorRef]) extends Actor {
+  this:Preferences=>
+  val acqquaintances = addresses map {_.swap}
 }
 
 /**
-  * Agent which is reactive
-  * @param name of the agent
-  * @param acquaintances
-  *
+  * Agent which is proactive
+  * @param addresses
+  * TODO override def preStart(): Unit = super.preStart()
   * */
-abstract class ProactiveAgent(override var acquaintances: Map[String, ActorRef],
-                              goals: Seq[Goal]) extends Agent(acquaintances) {
-  this:StateOfMind=>
+abstract class ProactiveAgent(override val addresses: Map[String, ActorRef],
+                              goals: Seq[Goal]) extends Agent(addresses) {
+  this:Preferences=>
 }
 
 /**
   * Multiagent system
-  * @param name of the agent
-  * @param acquaintances
+  * @param addresses
   *
   * */
-abstract class MultiagentSystem(override var acquaintances: Map[String, ActorRef])
-  extends Agent(acquaintances) {
+abstract class MultiagentSystem(var addresses: Map[String, ActorRef])
+  extends Actor{
   this:Solution=>
   var boss: ActorRef = _//ref to the main application
-
 }
-
