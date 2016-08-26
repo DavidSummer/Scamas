@@ -5,6 +5,12 @@ package org.scamas.smp
 import akka.actor.{ActorRef, Props}
 import org.scamas.core._
 
+import scala.collection.mutable.Queue
+
+/**
+  * Class representing partial/complete solution of SMP
+ */
+
 class Marriage(husband: String, val wife: String) extends PartialSolution
 class Matching(var result: List[Marriage]) extends Solution(result){
   //Add a marriage
@@ -17,10 +23,9 @@ class Matching(var result: List[Marriage]) extends Solution(result){
   * @param name of the agent
   * @param addresses
   */
-class Solver(override var addresses: Map[String, ActorRef],
-             var men: Seq[Individual],
+class Solver(var men: Seq[Individual],
              var women: Seq[Individual])
-              extends MultiagentSystem(addresses) {
+              extends MultiagentSystem {
   this: Matching =>
   /**
     * Method invoked when a message is received by the solver
@@ -30,9 +35,24 @@ class Solver(override var addresses: Map[String, ActorRef],
     case Start => {
       boss= sender// note the reference to the application
       //TODO
+      // The negotiators
+      var proactiveAgents : Queue[ActorRef]= Queue()
+      women.foreach{ case woman =>
+        val disposer = context.actorOf(Props(classOf[Disposer],woman), name =woman.myName)
+        super.addAcquaintances(woman.myName,disposer)
+
+      }
       men.foreach{ case man =>
-        val proposer =context.actorOf(Props(classOf[Proposer]), man.name)
-        proposer ! Start
+        val proposer = context.actorOf(Props(classOf[Proposer],man), name =man.myName)
+        addAcquaintances(man.myName,proposer)
+        proactiveAgents += proposer
+      }
+      acquaintances.addresses.foreach{ case (name,agent) =>
+          agent ! Inform(acquaintances.addresses)
+
+      }
+      for (proactiveAgent<- proactiveAgents){
+        proactiveAgent ! Start
       }
     }
 

@@ -1,8 +1,7 @@
 // Copyright (C) Dialectics 2016
 package org.scamas.core
 
-import akka.actor.{Actor,ActorRef}
-
+import akka.actor.{Actor, ActorRef}
 
 /**
   * Goal which can be active or achieved
@@ -15,15 +14,22 @@ case class AchievedGoal(name: String) extends Goal(name)
 
 
 /*
- * Preferences are immutable state of mind for agents
+ * Profile is an immutable state of mind for an agent
+ * @param myName is the agent's name
  */
-abstract class Preferences
+abstract class Profil(val myName: String)
 
 /**
-  * Solution for a multiagent problem
- */
-abstract class PartialSolution
-abstract class Solution(result: List[PartialSolution])
+  * Class to represents the bijections between the name and the adresses of the agents
+  * Acquaitances corresponds to the Internal mutable internal state of mind for an agent
+  *
+  */
+final class Acquaintances(val addresses: Map[String, ActorRef], val names: Map[ActorRef, String])
+  extends Tuple2[Map[String, ActorRef],Map[ActorRef,String]](addresses,names)
+object Acquaintances {
+  val NOADRRESSES = Map[String, ActorRef]()
+  val NONAMES = Map[ActorRef, String]()
+}
 
 
 /**
@@ -31,9 +37,24 @@ abstract class Solution(result: List[PartialSolution])
   * @param addresses
   *
   * */
-abstract class Agent(val addresses: Map[String, ActorRef]) extends Actor {
-  this:Preferences=>
-  val acqquaintances = addresses map {_.swap}
+abstract class Agent(val profil: Profil) extends Actor{
+  import Acquaintances._
+  var acquaintances: Acquaintances = new Acquaintances(NOADRRESSES,NONAMES)
+
+  def updateAcquaintances(addresses: Map[String,ActorRef]) = {
+    this.acquaintances=new Acquaintances(addresses, addresses map {_.swap})
+  }
+
+  def addAcquaintances(name: String, address: ActorRef) = {
+    val addresses= acquaintances.addresses + (name -> address)
+    this.acquaintances=new Acquaintances(addresses, addresses map {_.swap})
+  }
+
+  def defaultReceive(move: Move) = move match {
+    case Inform(addresses) =>
+      this.updateAcquaintances(addresses)
+  }
+
 }
 
 /**
@@ -41,18 +62,35 @@ abstract class Agent(val addresses: Map[String, ActorRef]) extends Actor {
   * @param addresses
   * TODO override def preStart(): Unit = super.preStart()
   * */
-abstract class ProactiveAgent(override val addresses: Map[String, ActorRef],
-                              goals: Seq[Goal]) extends Agent(addresses) {
-  this:Preferences=>
+abstract class ProactiveAgent(profil: Profil) extends Agent(profil){
 }
+
+
+/**
+  * Solution for a multiagent problem
+  */
+abstract class PartialSolution
+abstract class Solution(result: List[PartialSolution])
 
 /**
   * Multiagent system
   * @param addresses
   *
   * */
-abstract class MultiagentSystem(var addresses: Map[String, ActorRef])
-  extends Actor{
-  this:Solution=>
+abstract class MultiagentSystem extends Actor{
   var boss: ActorRef = _//ref to the main application
+
+  import Acquaintances._
+  var acquaintances: Acquaintances = new Acquaintances(NOADRRESSES,NONAMES)
+
+  def updateAcquaintances(addresses: Map[String,ActorRef]) = {
+    this.acquaintances=new Acquaintances(addresses, addresses map {_.swap})
+  }
+
+  def addAcquaintances(name: String, address: ActorRef) = {
+    val addresses= acquaintances.addresses + (name -> address)
+    this.acquaintances=new Acquaintances(addresses, addresses map {_.swap})
+  }
+
+
 }

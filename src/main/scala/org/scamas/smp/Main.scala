@@ -19,7 +19,7 @@ object Main {
   val debug= true
   val system = ActorSystem("SMPDemonstration")//The Actor system
   val TIMEOUTVALUE=50 seconds// default timeout of a run
-  implicit val timeout = Timeout(TIMEOUTVALUE)
+  implicit val timeout = Timeout(TIMEOUTVALUE)// TODO make default Duration.Inf
 
   /**
     * Run the Actor system with the following default dispatcher and write a CSV file nbwWorkers,speedup
@@ -35,7 +35,7 @@ object Main {
     val y3= new Individual("y3",Array("x1","x3","x2"))
     val women= List(y1,y2,y3)
     // Launch a new system
-    val solver= system.actorOf(Props(classOf[Solver], Map[String, ActorRef]() ,men, women), name = "solver")
+    val solver= system.actorOf(Props(classOf[Solver],men, women), name = "solver")
 
     // The current thread is blocked and it waits for the solver to "complete" the Future with it's reply.
     val future = solver ? Start

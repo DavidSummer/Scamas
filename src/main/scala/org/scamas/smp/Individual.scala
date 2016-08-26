@@ -2,14 +2,14 @@
 package org.scamas.smp
 
 import akka.actor.{ActorRef, FSM}
-import org.scamas.core.{Agent, ProactiveAgent, Start, Preferences}
+import org.scamas.core._
 
 /**
-  * Preferences for the SMP
+  * Profile for the SMP
   * @param name of the individual
-  * @param preferences list of the potential partners from the preferred partner to the least preferred
+  * @param Profile list of the potential partners from the preferred partner to the least preferred
   */
-class Individual(var name: String, var preferences: Array[String]) extends Preferences{
+class Individual(override val myName: String, val preferences: Array[String]) extends Profil(myName){
   /**
   * Method to evaluate the regret of the individual
   * The regret of an individual is 0 with the first partner in the list,
@@ -23,13 +23,6 @@ class Individual(var name: String, var preferences: Array[String]) extends Prefe
   }
 }
 
-/**
-  * Internal mutable internal state of mind for the SMP agents
-  */
-final class StateOfMind(var partner: String, var concessionLevel: Int) extends Tuple2[String,Int](partner,concessionLevel)
-object StateOfMind {
-  val PHANTOM: String = "phantom"
-}
 
 /**
   * States the negotiator can be in
@@ -40,13 +33,21 @@ case object Free extends NegotiatorState
 case object Married extends NegotiatorState
 
 /**
+  * Internal mutable internal state of mind for the SMP agents
+  */
+final class StateOfMind(var partner: String, var concessionLevel: Int) extends Tuple2[String,Int](partner,concessionLevel)
+object StateOfMind {
+  val PHANTOM: String = "phantom"
+}
+
+
+/**
   * Proactive agent for the stable marriage problem
   * TODO abstract away the notion of goal
   * @param name of the agent
   * @param addresses
   */
-abstract class Proposer(override val addresses: Map[String, ActorRef]) extends Agent(addresses) with FSM[NegotiatorState,StateOfMind]  {
-  this:Individual=>
+class Proposer(profile: Individual) extends ProactiveAgent(profile) with FSM[NegotiatorState,StateOfMind]  {
   import StateOfMind._
   val debug = true
 
@@ -57,12 +58,13 @@ abstract class Proposer(override val addresses: Map[String, ActorRef]) extends A
   when(Free) {
     // If the proactive agent is triggered
     case Event(Start,stateOfMind) =>
-      addresses(preferences(0)) ! Propose
+      acquaintances.addresses(profile.preferences(0)) ! Propose
       stay using stateOfMind
     // If an acceptance is recieved
     case Event(Accept,stateOfMind) =>
-      val partner= acqquaintances(sender)
-      goto(Married) using new StateOfMind(partner,this.regret(partner))
+      val partner= acquaintances.names(sender)
+      val concessionLevel =profile.regret(acquaintances.names(sender))
+      goto(Married) using new StateOfMind(partner,concessionLevel)
   }
 
   // Or the proposer is married
@@ -70,21 +72,23 @@ abstract class Proposer(override val addresses: Map[String, ActorRef]) extends A
     //If the proposer received a divorce
     case Event(Divorce,stateOfMind) =>
       val concessionLevel = stateOfMind.concessionLevel+1
-      val potentialPartner = preferences(concessionLevel)
-      addresses(potentialPartner) ! Propose
+      val potentialPartner = profile.preferences(concessionLevel)
+      acquaintances.addresses(potentialPartner) ! Propose
       goto(Free) using  new StateOfMind(PHANTOM,concessionLevel)
   }
 
-  // Common code for both states, e.g. dropping messages
   whenUnhandled {
+    case Event(m: Move, s) =>
+      defaultReceive(m)
+      stay
     case Event(e, s) =>
-      println(name+": ERROR  unexpected event {} in state {}/{}", e, stateName, s)
+      println(profile.myName+": ERROR  unexpected event {} in state {}/{}", e, stateName, s)
       stay
   }
 
   //  Associates actions with a transition instead of with a state and even, e.g. debugging
   onTransition {
-    case _ -> _ =>  if (debug) println(name+" get married with {} at concessionLevel {}", nextStateData.partner, nextStateData.concessionLevel)
+    case _ -> _ =>  if (debug) println(profile.myName+" get married with {} at concessionLevel {}", nextStateData.partner, nextStateData.concessionLevel)
   }
 
   // Finally starting it up using initialize, which performs the transition into the initial state and sets up timers (if required).
@@ -96,8 +100,7 @@ abstract class Proposer(override val addresses: Map[String, ActorRef]) extends A
   * @param name of the agent
   * @param addresses
   */
-abstract class Disposer(override val addresses: Map[String, ActorRef]) extends Agent(addresses) with FSM[NegotiatorState,StateOfMind] {
-  this: Individual =>
+class Disposer(profile: Individual) extends Agent(profile) with FSM[NegotiatorState,StateOfMind] {
   import StateOfMind._
 
   val debug=true
@@ -107,33 +110,36 @@ abstract class Disposer(override val addresses: Map[String, ActorRef]) extends A
   // Either the agent is free
   when(Free) {
     case Event(Propose,_) =>
-      val proposer= acqquaintances(sender)
-      goto(Married) using new StateOfMind(proposer,this.regret(proposer)) replying Accept
+      val proposer= acquaintances.names(sender)
+      goto(Married) using new StateOfMind(proposer,profile.regret(proposer)) replying Accept
   }
 
   // Or the agent is married
   when(Married) {
     // The proposal is worst than the current regret
-    case Event(Propose,stateOfMind) if this.regret(acqquaintances(sender)) < stateOfMind.concessionLevel =>
+    case Event(Propose,stateOfMind) if profile.regret(acquaintances.names(sender)) < stateOfMind.concessionLevel =>
       stay replying Reject
     // The proposal is better than the current regret
-    case Event(Propose,stateOfMind) if this.regret(acqquaintances(sender)) >= stateOfMind.concessionLevel =>
+    case Event(Propose,stateOfMind) if profile.regret(acquaintances.names(sender)) >= stateOfMind.concessionLevel =>
       val previousPartner= stateOfMind.partner
-      addresses(previousPartner) ! Reject
-      val newPartner = acqquaintances(sender)
-      stay using new StateOfMind(newPartner,this.regret(newPartner))replying Accept
+      acquaintances.addresses(previousPartner) ! Reject
+      val newPartner = acquaintances.names(sender)
+      stay using new StateOfMind(newPartner,profile.regret(newPartner))replying Accept
   }
 
   // Common code for both states
   whenUnhandled {
+    case Event(m: Move, s) =>
+      defaultReceive(m)
+      stay
     case Event(e, s) =>
-      println(name+": ERROR  unexpected event {} in state {}/{}", e, stateName, s)
+      println(profile.myName+": ERROR  unexpected event {} in state {}/{}", e, stateName, s)
       stay
   }
 
   //  Associates actions with a transition instead of with a state and even, e.g. debugging
   onTransition {
-    case _ -> _ =>  if (debug) println(name+" get married with {} at concessionLevel {}", nextStateData.partner, nextStateData.concessionLevel)
+    case _ -> _ =>  if (debug) println(profile+" get married with {} at concessionLevel {}", nextStateData.partner, nextStateData.concessionLevel)
   }
 
   // Finally starting it up using initialize, which performs the transition into the initial state and sets up timers (if required).
