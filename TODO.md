@@ -11,3 +11,4 @@ Copyright (C) Dialectics 2016
 - [ ] Detect the termination
 - [ ] Management of goals by proactive agents
 - [ ] Refactor MultiagentSystem and Agent
+- [ ] Abstract away acceptability criteria and bidding strategy
