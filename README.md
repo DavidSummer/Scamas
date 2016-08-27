@@ -43,8 +43,8 @@ application code. We focus in particular:
 - the termination detection superimposed on the underlying
   multiagent algorithms;
 
--the observation of the agents and communications channels during
-  a decentralized execution of the multiagent systems;
+- the observation of the agents and communications channels during
+  a decentralized execution of the multiagent systems.
 
 ## Use case
 
@@ -84,7 +84,6 @@ In order to compile the code you need:
 
     sbt run
 
-The programm prints a CSV file nbwWorkers,speedup.
 
 ## Installation
 
