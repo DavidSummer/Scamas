@@ -36,11 +36,14 @@ class Proposer(profile: Individual) extends ProactiveAgent(profile) with FSM[Neg
   // A negotiator  begins its existence as free with a concession level of 0
   startWith(Free,new StateOfMind(PHANTOM,0))
 
+  // Method to determinate the target of a proposal
+  def biddingStrategy(stateOfMind: StateOfMind) : String =  profile.preferences(stateOfMind.concessionLevel)
+
   // Either the proposer is free
   when(Free) {
     // If the proactive agent is triggered
     case Event(Start,stateOfMind) =>
-      acquaintances.addresses(profile.preferences(stateOfMind.concessionLevel)) ! Propose
+      acquaintances.addresses(biddingStrategy(stateOfMind)) ! Propose
       stay using stateOfMind
     // If an acceptance is received
     case Event(Accept,stateOfMind) =>
@@ -87,7 +90,7 @@ class Disposer(profile: Individual) extends Agent(profile) with FSM[NegotiatorSt
   val debug=true
 
   // Method to determinate the acceptance of a proposal
-  def acceptance(sender: ActorRef, stateOfMind: StateOfMind) = {
+  def acceptabilityCriteria(sender: ActorRef, stateOfMind: StateOfMind) = {
     if (profile.regret(acquaintances.names(sender)) < stateOfMind.concessionLevel) true
     false
   }
@@ -106,10 +109,10 @@ class Disposer(profile: Individual) extends Agent(profile) with FSM[NegotiatorSt
   // Or the agent is married
   when(Married) {
     // The proposal is worst than the current regret
-    case Event(Propose,stateOfMind) if acceptance(sender,stateOfMind: StateOfMind)=>
+    case Event(Propose,stateOfMind) if acceptabilityCriteria(sender,stateOfMind: StateOfMind)=>
       stay replying Reject
     // The proposal is better than the current regret
-    case Event(Propose,stateOfMind) if (!acceptance(sender,stateOfMind: StateOfMind)) =>
+    case Event(Propose,stateOfMind) if (!acceptabilityCriteria(sender,stateOfMind: StateOfMind)) =>
       val previousPartner= stateOfMind.partner
       acquaintances.addresses(previousPartner) ! Reject
       val newPartner = acquaintances.names(sender)
