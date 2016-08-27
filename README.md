@@ -5,10 +5,17 @@ behavioural approach of distributed problem solving.
 
 ## Use case
 
-
+We are interested in well-known problems in Computer Science and
+Social Theory, e.g. Stable Marriage Problem (\SM). Considering
+two communities in which each member has some preferences on the
+potential partners, the goal is to make pairs taking into account
+their preferences. This abstract problem has many applications. From a
+multiagent approach, the seminal Gale-Shapley algorithm solves the SM 
+problem by distinguishing two agent behaviors: a community of proposers 
+and a community of responders. The negotiations between agents lead to
+a stable solution.
 
 ## Implementation
-
 
 The implementation is based on:
 
