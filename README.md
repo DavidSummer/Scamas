@@ -10,10 +10,10 @@ concurrency is suitable for both distribution levels.
 In particular, the Actor model, based on the principle of locality,
 consider agents as independent programs with a behavior that send and
 receive asynchronous messages [(Hewitt et al., 91)](http://dl.acm.org/citation.cfm?id=1624775.1624804). 
-Multiagent systems are an addition abstraction to solve social decision problem such as
-resources/tasks allocation or matching. 
+Multiagent systems are an addition abstraction to solve social decision 
+problem such as resources/tasks allocation or matching by autonomous entities.
 
-The main difficulties in designing such multiagent systems are that:
+The main difficulties in designing such operational multiagent systems are that:
 
 - agents do not share the same clock, i.e. a resolution can reach
   different results from executions that start at the same internal
@@ -52,15 +52,13 @@ In order to test and validate our proposal, our catalog is applied to
 two toys problems: a stable assignment problem and a problem of fair
 tasks allocation.
 
-We are interested in well-known problems in Computer Science and
-Social Theory, e.g. Stable Marriage Problem SM. Considering
-two communities in which each member has some preferences on the
-potential partners, the goal is to make pairs taking into account
-their preferences. This abstract problem has many applications. From a
-multiagent approach, the seminal Gale-Shapley algorithm solves the SM 
-problem by distinguishing two agent behaviors: a community of proposers 
-and a community of responders. The negotiations between agents lead to
-a stable solution.
+The stable marriage problem considers two communities in which each 
+member has some preferences on the potential partners, the goal is 
+to make pairs taking into account their preferences. This abstract 
+problem  has many applications. From a multiagent approach, the seminal 
+Gale-Shapley algorithm solves the SM  problem by distinguishing two 
+agent behaviors: a community of proposers and a community of responders. 
+The negotiations between agents lead to a stable solution.
 
 ## Implementation
 
@@ -72,8 +70,7 @@ The implementation is based on:
 
 ## Requirements
 
-In order to run the demonstration you need: the Java virtual machine
-[JVM
+In order to run the demonstration you need: the Java virtual machine [JVM
 1.8.0_60](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 In order to compile the code you need:
