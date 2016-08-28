@@ -1,7 +1,7 @@
 // Copyright (C) Dialectics 2016
 package org.scamas.dsmp
 
-import org.scamas.core.{Start, Stop}
+import org.scamas.core.{Start, Halt}
 import org.scamas.smp.Individual
 
 import akka.actor.{ActorSystem, Props}
@@ -38,8 +38,8 @@ object Main {
 
     // The current thread is blocked and it waits for the solver to "complete" the Future with it's reply.
     val future = solver ? Start
-    val result = Await.result(future, timeout.duration).asInstanceOf[Stop]
-    println("That's all folk !")
+    val result = Await.result(future, timeout.duration).asInstanceOf[Halt].content
+    println("That's all folk ! "+result)
 
   }
 }

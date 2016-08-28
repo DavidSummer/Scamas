@@ -25,7 +25,6 @@ class Solver(var men: Seq[Individual],
     // When the works should be done
     case Start => {
       boss= sender// note the reference to the application
-      //TODO
       // The negotiators
       var proactiveAgents : Queue[ActorRef]= Queue()
       women.foreach{ case woman =>
@@ -38,12 +37,13 @@ class Solver(var men: Seq[Individual],
         addAcquaintances(man.myName,proposer)
         proactiveAgents += proposer
       }
+      // Trigger the proactive agents
       acquaintances.addresses.foreach{ case (name,agent) =>
           agent ! Inform(acquaintances.addresses)
 
       }
       for (proactiveAgent<- proactiveAgents){
-        proactiveAgent ! Start
+        proactiveAgent ! Trigger
       }
     }
 

@@ -42,7 +42,7 @@ class Proposer(profile: Individual) extends ProactiveAgent(profile) with FSM[Neg
   // Either the proposer is free
   when(Free) {
     // If the proactive agent is triggered
-    case Event(Start,stateOfMind) =>
+    case Event(Trigger,stateOfMind) =>
       acquaintances.addresses(biddingStrategy(stateOfMind)) ! Propose
       stay using stateOfMind
     // If an acceptance is received
@@ -57,7 +57,7 @@ class Proposer(profile: Individual) extends ProactiveAgent(profile) with FSM[Neg
     //If the proposer received a divorce
     case Event(Divorce,stateOfMind) =>
       val concessionLevel = stateOfMind.concessionLevel+1
-      self ! Start
+      self ! Trigger
       goto(Free) using  new StateOfMind(PHANTOM,concessionLevel)
   }
 
@@ -76,7 +76,7 @@ class Proposer(profile: Individual) extends ProactiveAgent(profile) with FSM[Neg
     case _ -> _ =>  if (debug) println(profile.myName+" get married with "+nextStateData.partner+" at concessionLevel "+ nextStateData.concessionLevel)
   }
 
-  // Finally starting it up using initialize, which performs the transition into the initial state and sets up timers (if required).
+  // Finally Triggering it up using initialize, which performs the transition into the initial state and sets up timers (if required).
   initialize()
 }
 
@@ -134,6 +134,6 @@ class Disposer(profile: Individual) extends Agent(profile) with FSM[NegotiatorSt
     case _ -> _ =>  if (debug) println(profile.myName+" get married with "+nextStateData.partner+" at concessionLevel "+ nextStateData.concessionLevel)
   }
 
-  // Finally starting it up using initialize, which performs the transition into the initial state and sets up timers (if required).
+  // Finally Triggering it up using initialize, which performs the transition into the initial state and sets up timers (if required).
   initialize()
 }
