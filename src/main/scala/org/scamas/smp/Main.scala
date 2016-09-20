@@ -1,22 +1,20 @@
 // Copyright (C) Dialectics 2016
-package org.scamas.dsmp
-
-import org.scamas.core.{Start, Halt}
-import org.scamas.smp.Individual
+package org.scamas.smp
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import org.scamas.core.{Halt, Start}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Main app to test distributed Gale-Shapley solver
+  * Main app to test centralized Gale-Shapley solver
   * */
 object Main {
   val debug= true
-  val system = ActorSystem("DSMPDemonstration")//The Actor system
+  val system = ActorSystem("SMPDemonstration")//The Actor system
   val TIMEOUTVALUE=50 seconds// default timeout of a run
   implicit val timeout = Timeout(TIMEOUTVALUE)// TODO make default Duration.Inf
 
@@ -34,12 +32,9 @@ object Main {
     val y3= new Individual("y3",Array("x1","x3","x2"))
     val women= List(y1,y2,y3)
     // Launch a new system
-    val solver= system.actorOf(Props(classOf[DMSPSolver],men, women), name = "solver")
-
-    // The current thread is blocked and it waits for the solver to "complete" the Future with it's reply.
-    val future = solver ? Start
-    val result = Await.result(future, timeout.duration).asInstanceOf[Halt].content
-    println("That's all folk ! "+result)
-
+    val solver= new SMPSolver(men, women)
+    solver.run()
+    if (debug) println(solver.solution)
+    println("That's all folk ! ")
   }
 }

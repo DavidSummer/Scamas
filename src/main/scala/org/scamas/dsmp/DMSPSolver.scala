@@ -11,13 +11,14 @@ import org.scamas.smp._
 
 /**
   * Solver for the stable marriage problem
-  * @param name of the agent
-  * @param addresses
+  * @param men
+  * @param women
   */
-class Solver(var men: Seq[Individual],
-             var women: Seq[Individual])
+class DMSPSolver(var men: Seq[Individual],
+                 var women: Seq[Individual])
               extends MultiagentSystem {
-  this: Matching =>
+
+  var matching = new Matching(Nil)
   /**
     * Method invoked when a message is received by the solver
     */
@@ -49,9 +50,9 @@ class Solver(var men: Seq[Individual],
 
     // When a work is done
     case Stop(marriage: Marriage) => {
-      this.add(marriage)
-      if (result.size==men.size){
-       boss !  Halt(this)
+      matching.add(marriage)
+      if (matching.size==men.size){
+       boss !  Halt(matching)
       }
     }
   }

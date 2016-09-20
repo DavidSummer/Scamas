@@ -4,6 +4,8 @@ package org.scamas.dsmp
 import akka.actor.{ActorRef, FSM}
 import org.scamas.core._
 import org.scamas.smp.Individual
+import org.scamas.smp.StateOfMind
+
 
 
 /**
@@ -13,16 +15,6 @@ sealed trait NegotiatorState
 case object Free extends NegotiatorState
 case object Married extends NegotiatorState
 
-/**
-  * Internal mutable internal state of mind for the SMP agents
-  * @param partner is the current one
-  * @param concessionLevel where the partner is in the preference list
-  */
-final class StateOfMind(var partner: String, var concessionLevel: Int) extends Tuple2[String,Int](partner,concessionLevel)
-// Initial stateOfMind
-object StateOfMind {
-  val PHANTOM: String = "phantom"// initial partner
-}
 
 
 /**
